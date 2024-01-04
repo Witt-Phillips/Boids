@@ -13,6 +13,9 @@ public:
     
     // Methods
 
+    // returns magnitude
+    float mag();
+
     void print();
 
     void add(Vector2 &other);
@@ -29,7 +32,6 @@ public:
     // if magnitude > max_mag, scales down s.t. this->mag == max_mag
     void limit(float max_mag);
 
-    float mag();
 };
 
 /*

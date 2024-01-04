@@ -16,6 +16,10 @@ void Vector2::print() {
     cout << "x: " << this->x << ", y: " << this->y << ", mag: " << this->mag()  << endl;
 }
 
+float Vector2::mag() {
+    return sqrt(pow(this->x, 2) + pow(this->y, 2));
+}
+
 void Vector2::add(Vector2 &other) {
     this->x += other.x;
     this->y += other.y;
@@ -45,8 +49,4 @@ void Vector2::norm() {
 void Vector2::limit(float max_mag) {
     float scaling_factor = min(max_mag, this->mag()) / this->mag();
     this->mult(scaling_factor);
-}
-
-float Vector2::mag() {
-    return sqrt(pow(this->x, 2) + pow(this->y, 2));
 }
