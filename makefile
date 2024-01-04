@@ -1,5 +1,7 @@
 CXX	 = g++
 
+
+
 all: boid
 
 boid: simulate.o boid.o vector.o
