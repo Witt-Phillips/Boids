@@ -1,3 +1,6 @@
+#ifndef VECTOR_H
+#define VECTOR_H
+
 #include <cmath>
 
 // Header file for vector classes
@@ -33,6 +36,8 @@ public:
     void limit(float max_mag);
 
 };
+
+#endif
 
 /*
 Ways to create a vector:
