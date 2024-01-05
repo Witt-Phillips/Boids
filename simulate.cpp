@@ -1,4 +1,7 @@
+#define FLOCK_SIZE 5
+
 #include "boid.h"
+#include "flock.h"
 #include "vector.h"
 #include <stdlib.h>
 #include <iostream>
@@ -8,16 +11,11 @@
 using namespace std;
 
 int main() {
-    // testing
-    Boid test_boid;
-    test_boid.velocity.x = test_boid.max_speed;
-    test_boid.velocity.y = 0;
-    test_boid.print();
+    Flock test_flock = Flock(FLOCK_SIZE);
 
     // Graphics
     GLFWwindow* window;
 
-    /* Initialize the library */
     if (!glfwInit())
         return -1;
 
@@ -31,26 +29,14 @@ int main() {
         return -1;
     }
 
-    /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    std::cout << glGetString(GL_VERSION) << std::endl;
-
-    /* Loop until the user closes the window */
+    // Draw loop
     while (!glfwWindowShouldClose(window))
     {   
-        /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-
-        // UPDATE & DRAW BOID (loop for flock)
-        test_boid.adjustAcceleration();
-        test_boid.update();
-        test_boid.draw();
-
-        /* Swap front and back buffers */
+        test_flock.timestep();
         glfwSwapBuffers(window);
-
-        /* Poll for and process events */
         glfwPollEvents();
     }
 

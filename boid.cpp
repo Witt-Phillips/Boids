@@ -52,6 +52,7 @@ float Boid::angle() {
 void Boid::update() {
     // Note - acceleration is added to velocity based on info from the current timestep.
     //i.e. perception cycle is limited within each timestep
+
     this->velocity.add(this->acceleration);
     //cout << "Acceleration added to velocity. New velocity: [" << this->velocity.x << ", " << this->velocity.y << "]" << endl; 
 
@@ -73,9 +74,6 @@ void Boid::adjustAcceleration() {
 
     this->acceleration.add(noise);
     this->acceleration.add(wall_avoid);
-
-    // limit acceleration by max force
-
 }
 
 Vector2 Boid::genNoise() {
@@ -153,5 +151,17 @@ Vector2 Boid::avoid(float x, float y) {
     l8rsk8rvctr.norm();
     l8rsk8rvctr.div(this->vecDist(pos));
     return l8rsk8rvctr;
+}
+
+// RULES -----------------------
+
+Vector2 Boid::cohesion(Flock flock) {
+    Vector2 coh_vec = Vector2();
+    for (Boid& other : flock.boids) {
+        if (this->dist(other) < COH_THRESH) {
+            // seek that boid, then add to coh_vec
+        }
+    }
+    return coh_vec;
 }
 
