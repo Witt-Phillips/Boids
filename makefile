@@ -12,4 +12,4 @@ boid-test: boid.o vector.o boid-test.o
 	${CXX} ${CFLAGS} ${INCLUDES} -o $@ $^ ${LIBS}
 
 clean:
-	${RM} simulate boid-test *.0 *.dSYM
+	${RM} simulate boid-test *.o *.dSYM

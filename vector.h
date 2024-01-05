@@ -21,9 +21,9 @@ public:
 
     void print();
 
-    void add(Vector2 &other);
+    void add(Vector2 other);
 
-    void sub(Vector2 &other);
+    void sub(Vector2 other);
 
     void mult(float scaling_factor);
 
@@ -36,6 +36,11 @@ public:
     void limit(float max_mag);
 
 };
+
+// Generalized
+Vector2 add(Vector2 vec1, Vector2 vec2);
+
+Vector2 sub(Vector2 vec1, Vector2 vec2);
 
 #endif
 
