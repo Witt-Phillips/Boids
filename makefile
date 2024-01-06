@@ -5,10 +5,10 @@ LIBS = -L/usr/lib/x86_64-linux-gnu -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ld
 
 all: simulate boid-test
 
-simulate: simulate.o boid.o vector.o flock.o
+simulate: vector.o boid.o flock.o simulate.o
 	${CXX} ${CFLAGS} ${INCLUDES} -o $@ $^ ${LIBS}
 
-boid-test: boid.o vector.o flock.o boid-test.o
+boid-test: vector.o boid.o flock.o boid-test.o
 	${CXX} ${CFLAGS} ${INCLUDES} -o $@ $^ ${LIBS}
 
 clean:

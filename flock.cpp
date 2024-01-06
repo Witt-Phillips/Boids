@@ -1,4 +1,6 @@
 #include "flock.h"
+#include "boid.h"
+
 
 void Flock::genBoid() {
     this->boids.push_back(Boid());
@@ -29,7 +31,7 @@ void Flock::print() {
 void Flock::timestep() {
     //for each boid: calculate new position based on all boids, update position, draw
     for (Boid& boid : this->boids) {
-        boid.adjustAcceleration();
+        boid.adjustAcceleration(*this);
         boid.update();
         boid.draw();
     }

@@ -25,9 +25,9 @@ public:
 
     void sub(Vector2 other);
 
-    void mult(float scaling_factor);
+    Vector2 mult(float scaling_factor);
 
-    void div(float scaling_factor);
+    Vector2 div(float scaling_factor);
 
     // divide x, y by magnitude
     void norm();

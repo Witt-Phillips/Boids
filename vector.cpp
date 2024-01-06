@@ -30,14 +30,16 @@ void Vector2::sub(Vector2 other) {
     this->y -= other.y;
 }
 
-void Vector2::mult(float scaling_factor) {
+Vector2 Vector2::mult(float scaling_factor) {
     this->x *= scaling_factor;
     this->y *= scaling_factor;
+    return *this;
 }
 
-void Vector2::div(float scaling_factor) {
+Vector2 Vector2::div(float scaling_factor) {
     this->x /= scaling_factor;
     this->y /= scaling_factor;
+    return *this;
 }
 
 void Vector2::norm() {

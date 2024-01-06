@@ -1,8 +1,10 @@
 #ifndef FLOCK_H
 #define FLOCK_H
 
-#include "boid.h"
+#include "vector.h"
 #include <vector>
+
+class Boid;
 
 class Flock {
 public:

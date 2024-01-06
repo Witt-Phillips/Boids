@@ -6,11 +6,21 @@
 #include <math.h>
 
 #define SCALE 0.05
-#define MAX_SPEED 0.0004
-#define MAX_FORCE 0.0000004
-#define NOISE 0.000001f
-#define OBS_THRESH 0.25
+#define MAX_SPEED 0.0007
+#define MAX_FORCE 0.0000005
+#define NOISE 0.0000001f
+#define OBS_THRESH 0.2
 #define COH_THRESH 0.3
+#define SEP_THRESH 0.1
+
+#define COH_WEIGHT 1
+#define SEP_WEIGHT 1.5
+#define ALI_WEIGHT 1
+#define WALL_WEIGHT 2
+
+#define COH_ON true
+#define SEP_ON true
+#define ALI_ON true
 
 class Boid {
 public:
@@ -42,10 +52,12 @@ public:
     void update();
 
     // combines all rules & some noise to calculate acceleration
-    void adjustAcceleration();
+    void adjustAcceleration(Flock flock);
 
     // returns vector generated from avoidance of point x, y
     Vector2 avoid(float x, float y);
+
+    Vector2 seek(float x, float y);
 
     // outputs boid to display
     void draw();

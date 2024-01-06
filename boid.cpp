@@ -12,14 +12,16 @@ Boid::Boid() {
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
-    this->position.x = dist(gen);
-    this->position.y = dist(gen);
-    this->velocity;
-    this->acceleration;
-
     this->scale         = SCALE;
     this->max_speed     = MAX_SPEED;
     this->max_force     = MAX_FORCE;
+
+    this->position.x = dist(gen);
+    this->position.y = dist(gen);
+    this->velocity.x = dist(gen);
+    this->velocity.y = dist(gen);
+    this->velocity.limit(this->max_speed);
+    this->acceleration;
 }
 
 Boid::Boid(float x, float y) : Boid::Boid() {
@@ -65,15 +67,12 @@ void Boid::update() {
     this->acceleration.mult(0);
 }
 
-void Boid::adjustAcceleration() {
-    // this->seperate();
-    // this->align();
-    // this->cohere();
-    Vector2 noise = this->genNoise();
-    Vector2 wall_avoid = this->avoidWalls();
-
-    this->acceleration.add(noise);
-    this->acceleration.add(wall_avoid);
+void Boid::adjustAcceleration(Flock flock) {
+    this->acceleration.add(this->genNoise());
+    this->acceleration.add(this->avoidWalls().mult(WALL_WEIGHT));
+    if (COH_ON) {this->acceleration.add(this->cohesion(flock).mult(COH_WEIGHT));}
+    if (SEP_ON) {this->acceleration.add(this->separation(flock).mult(SEP_WEIGHT));}
+    if (ALI_ON) {this->acceleration.add(this->alignment(flock).mult(ALI_WEIGHT));}
 }
 
 Vector2 Boid::genNoise() {
@@ -145,6 +144,7 @@ Vector2 Boid::avoidWalls() {
     return avoid_vec;
 }
 
+// returns steer away from point
 Vector2 Boid::avoid(float x, float y) {
     Vector2 pos = Vector2(x, y);
     Vector2 l8rsk8rvctr = sub(this->position, pos);
@@ -153,15 +153,91 @@ Vector2 Boid::avoid(float x, float y) {
     return l8rsk8rvctr;
 }
 
+// returns steer towards point
+Vector2 Boid::seek(float x, float y) {
+    Vector2 pos = Vector2(x, y);
+    Vector2 to_target = sub(pos, this->position);
+    to_target.norm();
+    to_target.mult(this->max_speed);
+
+    //we now have a scaled vector pointing towards the target, so can calculate steer (to be added to acceleration)
+    to_target.sub(this->velocity);
+    to_target.limit(this->max_force);
+    return to_target;
+}
+
 // RULES -----------------------
 
+// first calculates average position of close but not too-close boids, then gets steering vector to it
 Vector2 Boid::cohesion(Flock flock) {
-    Vector2 coh_vec = Vector2();
+    Vector2 avg_pos = Vector2();
+    int count = 0;
     for (Boid& other : flock.boids) {
-        if (this->dist(other) < COH_THRESH) {
+        float dist = this->dist(other);
+        // include > SEP_THRESH CLAUSE?
+        if ((dist > 0) && (dist < COH_THRESH)) {
             // seek that boid, then add to coh_vec
+            avg_pos.add(other.position);
+            count++;
         }
     }
-    return coh_vec;
+
+    // returns vector to be added to acceleration based on seeking other boids
+    if (count > 0) {
+        avg_pos.div(count);
+        return this->seek(avg_pos.x, avg_pos.y);
+    } else {
+        return Vector2();
+    }
+}
+
+Vector2 Boid::separation(Flock flock) {
+    Vector2 sep_vec = Vector2();
+    int count = 0;
+    for (Boid& other : flock.boids) {
+        float dist = this->dist(other);
+        // include > SEP_THRESH CLAUSE?
+        if ((dist > 0) && (dist < COH_THRESH)) {
+            // seek that boid, then add to coh_vec
+            sep_vec.add(this->avoid(other.position.x, other.position.y));
+            count++;
+        }
+    }
+
+    // returns vector to be added to acceleration based on seeking other boids
+    if (count > 0) {
+        sep_vec.div(count);
+    }
+
+    if (sep_vec.mag() > 0) {
+        sep_vec.norm();
+        sep_vec.mult(max_speed);
+        sep_vec.sub(this->velocity);
+        sep_vec.limit(this->max_force);
+        return sep_vec;
+    } else {
+        return Vector2();
+    }
+}
+
+Vector2 Boid::alignment(Flock flock) {
+    Vector2 align_vec = Vector2();
+    bool aligning = false;
+    for (Boid& other : flock.boids) {
+        float dist = this->dist(other);
+        // include > SEP_THRESH CLAUSE?
+        if ((dist > 0) && (dist < COH_THRESH)) {
+            // seek that boid, then add to coh_vec
+            align_vec.add(other.velocity);
+            aligning = true;
+        }
+    }
+
+    // returns vector to be added to acceleration based on seeking other boids
+    if (aligning) {
+        return this->seek(align_vec.x, align_vec.y);
+    } else {
+        return Vector2();
+    }
 }
 
