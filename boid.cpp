@@ -6,6 +6,13 @@
 
 using namespace std;
 
+glm::vec3 randomColorVec() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
+    return glm::vec3(color_dist(gen), color_dist(gen), color_dist(gen));
+}
+
 // default constructor randomly generates a boid in the frame.
 Boid::Boid() {
     std::random_device rd;
@@ -23,7 +30,8 @@ Boid::Boid() {
     this->velocity.limit(this->max_speed);
     this->acceleration;
 
-    this->color = std::vector<float>(3, 1.0f);
+    std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
+    this->color = randomColorVec();
 }
 
 Boid::Boid(float x, float y) : Boid::Boid() {
@@ -92,7 +100,7 @@ void Boid::draw() {
 
     // Draw the triangle representing the boid
     glBegin(GL_TRIANGLES);
-        glColor3f(this->r, this->g, this->b); // Set the color of the triangle
+        glColor3f(this->color[0], this->color[1], this->color[2]); // Set the color of the triangle
         glVertex2f(0.0, this->scale); // Top vertex
         glVertex2f(-this->scale / 2, -this->scale); // Bottom left vertex
         glVertex2f(this->scale / 2, -this->scale); // Bottom right vertex
@@ -248,35 +256,87 @@ Vector2 Boid::alignment(Flock flock) {
 }
 
 void Boid::handleEdges(){
+    bool went_off = false;
+    
     if (this->position.x > 1.1) {
         this->position.x = -1.1;
+        went_off = true;
     } else if (this->position.x < -1.1) {
         this->position.x = 1.1;
+        went_off = true;
     }
 
     if (this->position.y > 1.1) {
         this->position.y = -1.1;
+        went_off = true;
     } else if (this->position.y < -1.1) {
         this->position.y = 1.1;
+        went_off = true;
+    }
+
+    if (went_off && OFF_SCREEN_RANDOMIZE) {
+        this->color = randomColorVec();
     }
 }
 
+// Color shifting
+
+void Boid::boundColor() {
+    if (this->color[0] > 1) {
+        this->color[0] = MIN_COLOR_THRESH;
+    } else if (this->color[0] < MIN_COLOR_THRESH) {
+        this->color[0] = 1;
+    }
+
+    if (this->color[1] > 1) {
+        this->color[1] = MIN_COLOR_THRESH;
+    } else if (this->color[1] < MIN_COLOR_THRESH) {
+        this->color[1] = 1;
+    }
+
+    if (this->color[2] > 1) {
+        this->color[2] = MIN_COLOR_THRESH;
+    } else if (this->color[2] < MIN_COLOR_THRESH) {
+        this->color[2] = 1;
+    }
+}
+
+
 void Boid::colorCoord(Flock flock) {
-    std::vector<float> average_color;
+    glm::vec3 average_color(0.0f, 0.0f, 0.0f);
     int count = 0;
 
     for (Boid& other : flock.boids) {
         float dist = this->dist(other);
         if ((dist > 0) && (dist < COH_THRESH)) {
-            average_color.add()
-            count ++;
+            average_color += other.color;
+            count++;
         }
     }
 
     if (count > 0) {
-        avg_r /= count;
-        avg_g /= count;
-        avg_b /= count;
+        average_color /= count;
+        this->color = glm::mix(this->color, average_color, MAX_COLOR_FORCE);
+
+        /* glm::vec3 color_steer = average_color - this->color;
+        color_steer = glm::normalize(color_steer);
+        color_steer *= this->max_color_force;
+        this->color += color_steer;
+        this->boundColor(); */
     }
+}
+
+void Boid::colorNoise() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
+    glm::vec3 color_noise(color_dist(gen), color_dist(gen), color_dist(gen));
+
+    this->color = glm::mix(this->color, color_noise, 0.05);
+}
+
+void Boid::adjustColor(Flock flock) {
+    this->colorCoord(flock);
+    //this->colorNoise();
 }
 

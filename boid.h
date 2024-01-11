@@ -5,15 +5,19 @@
 #include "flock.h"
 #include <math.h>
 #include <glm/glm.hpp>
+//#include <glm/gtc/normalize.hpp> // glm::normalize
 
 #define FLOCK_SIZE 50
 #define SCALE 0.03
 #define MAX_SPEED 0.0015
 #define MAX_FORCE 0.0000045
-#define NOISE 0.0000001
+#define NOISE 0.00000005
 #define OBS_THRESH 0.1
 #define COH_THRESH 0.15
 #define SEP_THRESH 0.1
+
+#define MAX_COLOR_FORCE 0.007
+#define MIN_COLOR_THRESH 0.5
 
 #define COH_WEIGHT 1.2
 #define SEP_WEIGHT 1.7
@@ -25,6 +29,8 @@
 #define SEP_ON true
 #define ALI_ON true
 #define AV_ON false
+
+#define OFF_SCREEN_RANDOMIZE true
 
 
 class Boid {
@@ -40,6 +46,7 @@ public:
 
     //Color info:
     glm::vec3 color;
+    float max_color_force = MAX_COLOR_FORCE;
 
     // Constructors
     Boid();
@@ -75,6 +82,15 @@ public:
 
     // coordinates color by averaging with nearby group mates (with some optional noise)
     void colorCoord(Flock flock);
+
+    // bounds the color values to protect valid drawing
+    void boundColor();
+
+    // test to always increase color by 1
+    void colorNoise();
+
+    //Central color control
+    void adjustColor(Flock flock);
 
     // Rules: all return Vector2 representing contribution to final direction
     Vector2 cohesion(Flock flock);

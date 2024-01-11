@@ -33,6 +33,7 @@ void Flock::timestep() {
     for (Boid& boid : this->boids) {
         boid.handleEdges();
         boid.adjustAcceleration(*this);
+        boid.adjustColor(*this);
         boid.update();
         boid.draw();
     }
