@@ -22,6 +22,8 @@ Boid::Boid() {
     this->velocity.y = dist(gen);
     this->velocity.limit(this->max_speed);
     this->acceleration;
+
+    this->color = std::vector<float>(3, 1.0f);
 }
 
 Boid::Boid(float x, float y) : Boid::Boid() {
@@ -52,27 +54,22 @@ float Boid::angle() {
 }
 
 void Boid::update() {
-    // Note - acceleration is added to velocity based on info from the current timestep.
-    //i.e. perception cycle is limited within each timestep
-
-    this->velocity.add(this->acceleration);
-    //cout << "Acceleration added to velocity. New velocity: [" << this->velocity.x << ", " << this->velocity.y << "]" << endl; 
-
-    this->velocity.limit(this->max_speed);
-    //cout << "Velocity limited. New velocity: [" << this->velocity.x << ", " << this->velocity.y << "]" << endl; 
-
     this->position.add(this->velocity);
-    //cout << "Position updated. New position: [" << this->position.x << ", " << this->position.y << "]" << endl; 
-
+    this->velocity.add(this->acceleration);
     this->acceleration.mult(0);
 }
 
 void Boid::adjustAcceleration(Flock flock) {
-    this->acceleration.add(this->genNoise());
+    if (NOISE_ON) {this->acceleration.add(this->genNoise());}
     if (AV_ON) {this->acceleration.add(this->avoidWalls().mult(WALL_WEIGHT));}
     if (COH_ON) {this->acceleration.add(this->cohesion(flock).mult(COH_WEIGHT));}
     if (SEP_ON) {this->acceleration.add(this->separation(flock).mult(SEP_WEIGHT));}
     if (ALI_ON) {this->acceleration.add(this->alignment(flock).mult(ALI_WEIGHT));}
+
+    /* Vector2 alignment = this->alignment(flock);
+    this->acceleration.add(alignment); */
+
+
 }
 
 Vector2 Boid::genNoise() {
@@ -95,7 +92,7 @@ void Boid::draw() {
 
     // Draw the triangle representing the boid
     glBegin(GL_TRIANGLES);
-        glColor3f(0.941, 0.502, 0.502); // Set the color of the triangle
+        glColor3f(this->r, this->g, this->b); // Set the color of the triangle
         glVertex2f(0.0, this->scale); // Top vertex
         glVertex2f(-this->scale / 2, -this->scale); // Bottom left vertex
         glVertex2f(this->scale / 2, -this->scale); // Bottom right vertex
@@ -170,75 +167,84 @@ Vector2 Boid::seek(float x, float y) {
 
 // first calculates average position of close but not too-close boids, then gets steering vector to it
 Vector2 Boid::cohesion(Flock flock) {
-    Vector2 avg_pos = Vector2();
+    Vector2 steer = Vector2();
     int count = 0;
+    
     for (Boid& other : flock.boids) {
         float dist = this->dist(other);
         // include > SEP_THRESH CLAUSE?
         if ((dist > 0) && (dist < COH_THRESH)) {
             // seek that boid, then add to coh_vec
-            avg_pos.add(other.position);
+            steer.add(other.position);
             count++;
         }
     }
 
     // returns vector to be added to acceleration based on seeking other boids
     if (count > 0) {
-        avg_pos.div(count);
-        return this->seek(avg_pos.x, avg_pos.y);
-    } else {
-        return Vector2();
+        steer.div(count);
+        // get vector *to* avg_pos - steer was previously avg pos
+        steer.sub(this->position);
+        steer.norm();
+        steer.mult(this->max_speed);
+        steer.sub(this->velocity);
+        steer.limit(this->max_force);
     }
+
+    return steer;
 }
 
 Vector2 Boid::separation(Flock flock) {
-    Vector2 sep_vec = Vector2();
+    Vector2 steer = Vector2();
     int count = 0;
     for (Boid& other : flock.boids) {
         float dist = this->dist(other);
         // include > SEP_THRESH CLAUSE?
         if ((dist > 0) && (dist < COH_THRESH)) {
             // seek that boid, then add to coh_vec
-            sep_vec.add(this->avoid(other.position.x, other.position.y));
+            Vector2 diff = sub(this->position, other.position);
+            diff.div(dist);
+            steer.add(diff);
+            //sep_vec.add(this->avoid(other.position.x, other.position.y));
             count++;
         }
     }
 
     // returns vector to be added to acceleration based on seeking other boids
     if (count > 0) {
-        sep_vec.div(count);
+        steer.div(count);
+        steer.norm();
+        steer.mult(this->max_speed);
+        steer.sub(this->velocity);
+        steer.limit(this->max_force);
     }
 
-    if (sep_vec.mag() > 0) {
-        sep_vec.norm();
-        sep_vec.mult(max_speed);
-        sep_vec.sub(this->velocity);
-        sep_vec.limit(this->max_force);
-        return sep_vec;
-    } else {
-        return Vector2();
-    }
+   return steer;
 }
 
 Vector2 Boid::alignment(Flock flock) {
     Vector2 align_vec = Vector2();
-    bool aligning = false;
+    int count = 0;
     for (Boid& other : flock.boids) {
         float dist = this->dist(other);
         // include > SEP_THRESH CLAUSE?
         if ((dist > 0) && (dist < COH_THRESH)) {
             // seek that boid, then add to coh_vec
             align_vec.add(other.velocity);
-            aligning = true;
+            count++;
         }
     }
 
     // returns vector to be added to acceleration based on seeking other boids
-    if (aligning) {
-        return this->seek(align_vec.x, align_vec.y);
-    } else {
-        return Vector2();
+    if (count > 0) {
+        align_vec.div(count);
+        align_vec.norm();
+        align_vec.mult(this->max_speed);
+        align_vec.sub(this->velocity);
+        align_vec.limit(this->max_force);
     }
+
+    return align_vec;
 }
 
 void Boid::handleEdges(){
@@ -252,6 +258,25 @@ void Boid::handleEdges(){
         this->position.y = -1.1;
     } else if (this->position.y < -1.1) {
         this->position.y = 1.1;
+    }
+}
+
+void Boid::colorCoord(Flock flock) {
+    std::vector<float> average_color;
+    int count = 0;
+
+    for (Boid& other : flock.boids) {
+        float dist = this->dist(other);
+        if ((dist > 0) && (dist < COH_THRESH)) {
+            average_color.add()
+            count ++;
+        }
+    }
+
+    if (count > 0) {
+        avg_r /= count;
+        avg_g /= count;
+        avg_b /= count;
     }
 }
 

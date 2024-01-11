@@ -4,24 +4,28 @@
 #include "vector.h"
 #include "flock.h"
 #include <math.h>
+#include <glm/glm.hpp>
 
-#define SCALE 0.05
-#define MAX_SPEED 0.0007
-#define MAX_FORCE 0.0000005
-#define NOISE 0.0000001f
-#define OBS_THRESH 0.2
-#define COH_THRESH 0.3
+#define FLOCK_SIZE 50
+#define SCALE 0.03
+#define MAX_SPEED 0.0015
+#define MAX_FORCE 0.0000045
+#define NOISE 0.0000001
+#define OBS_THRESH 0.1
+#define COH_THRESH 0.15
 #define SEP_THRESH 0.1
 
-#define COH_WEIGHT 1
-#define SEP_WEIGHT 1.5
+#define COH_WEIGHT 1.2
+#define SEP_WEIGHT 1.7
 #define ALI_WEIGHT 1
 #define WALL_WEIGHT 2
 
-#define COH_ON false
-#define SEP_ON false
-#define ALI_ON false
+#define NOISE_ON false
+#define COH_ON true
+#define SEP_ON true
+#define ALI_ON true
 #define AV_ON false
+
 
 class Boid {
 public:
@@ -33,6 +37,9 @@ public:
     float scale;
     float max_speed;
     float max_force;
+
+    //Color info:
+    glm::vec3 color;
 
     // Constructors
     Boid();
@@ -65,6 +72,9 @@ public:
 
     // respawns boid on opposite end of screen if boundary overrun
     void handleEdges();
+
+    // coordinates color by averaging with nearby group mates (with some optional noise)
+    void colorCoord(Flock flock);
 
     // Rules: all return Vector2 representing contribution to final direction
     Vector2 cohesion(Flock flock);

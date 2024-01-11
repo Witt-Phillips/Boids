@@ -1,5 +1,3 @@
-#define FLOCK_SIZE 20
-
 #include "boid.h"
 #include "flock.h"
 #include "vector.h"
