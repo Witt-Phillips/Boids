@@ -69,7 +69,7 @@ void Boid::update() {
 
 void Boid::adjustAcceleration(Flock flock) {
     this->acceleration.add(this->genNoise());
-    this->acceleration.add(this->avoidWalls().mult(WALL_WEIGHT));
+    if (AV_ON) {this->acceleration.add(this->avoidWalls().mult(WALL_WEIGHT));}
     if (COH_ON) {this->acceleration.add(this->cohesion(flock).mult(COH_WEIGHT));}
     if (SEP_ON) {this->acceleration.add(this->separation(flock).mult(SEP_WEIGHT));}
     if (ALI_ON) {this->acceleration.add(this->alignment(flock).mult(ALI_WEIGHT));}
@@ -238,6 +238,20 @@ Vector2 Boid::alignment(Flock flock) {
         return this->seek(align_vec.x, align_vec.y);
     } else {
         return Vector2();
+    }
+}
+
+void Boid::handleEdges(){
+    if (this->position.x > 1.1) {
+        this->position.x = -1.1;
+    } else if (this->position.x < -1.1) {
+        this->position.x = 1.1;
+    }
+
+    if (this->position.y > 1.1) {
+        this->position.y = -1.1;
+    } else if (this->position.y < -1.1) {
+        this->position.y = 1.1;
     }
 }
 

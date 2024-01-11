@@ -31,6 +31,7 @@ void Flock::print() {
 void Flock::timestep() {
     //for each boid: calculate new position based on all boids, update position, draw
     for (Boid& boid : this->boids) {
+        boid.handleEdges();
         boid.adjustAcceleration(*this);
         boid.update();
         boid.draw();

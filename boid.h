@@ -18,9 +18,10 @@
 #define ALI_WEIGHT 1
 #define WALL_WEIGHT 2
 
-#define COH_ON true
-#define SEP_ON true
-#define ALI_ON true
+#define COH_ON false
+#define SEP_ON false
+#define ALI_ON false
+#define AV_ON false
 
 class Boid {
 public:
@@ -61,6 +62,9 @@ public:
 
     // outputs boid to display
     void draw();
+
+    // respawns boid on opposite end of screen if boundary overrun
+    void handleEdges();
 
     // Rules: all return Vector2 representing contribution to final direction
     Vector2 cohesion(Flock flock);
