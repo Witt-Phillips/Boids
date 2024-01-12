@@ -26,10 +26,10 @@ endif
 # Common build rules
 all: simulate boid-test
 
-simulate: vector.o boid.o flock.o simulate.o
+simulate: vector.o boid.o flock.o solid.o simulate.o
 	$(CXX) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-boid-test: vector.o boid.o flock.o boid-test.o
+boid-test: vector.o boid.o flock.o solid.o boid-test.o
 	$(CXX) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
 clean:

@@ -6,32 +6,18 @@
 
 using namespace std;
 
-glm::vec3 randomColorVec() {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
-    return glm::vec3(color_dist(gen), color_dist(gen), color_dist(gen));
-}
-
 // default constructor randomly generates a boid in the frame.
 Boid::Boid() {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-
+    this->type          = boid;
     this->scale         = SCALE;
     this->max_speed     = MAX_SPEED;
     this->max_force     = MAX_FORCE;
 
-    this->position.x = dist(gen);
-    this->position.y = dist(gen);
-    this->velocity.x = dist(gen);
-    this->velocity.y = dist(gen);
+    this->position = RandomCoords(-1.0f, 1.0f);
+    this->velocity = RandomCoords(-1.0f, 1.0f);
     this->velocity.limit(this->max_speed);
-    this->acceleration;
 
-    std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
-    this->color = randomColorVec();
+    this->color = RandomRGB();
 }
 
 Boid::Boid(float x, float y) : Boid::Boid() {
@@ -49,44 +35,15 @@ void Boid::print() {
     cout << "Max force: " << this->max_force << endl;
 }
 
-float Boid::dist(Boid &other) {
-    return sqrt(pow(other.position.x - this->position.x, 2) + pow(other.position.y - this->position.y, 2));
-}
-
-float Boid::vecDist(Vector2 &other) {
-    return sqrt(pow(other.x - this->position.x, 2) + pow(other.y - this->position.y, 2));
-}
-
 float Boid::angle() {
     return atan2(this->velocity.y, this->velocity.x);
 }
 
-void Boid::update() {
-    this->position.add(this->velocity);
-    this->velocity.add(this->acceleration);
-    this->acceleration.mult(0);
-}
-
 void Boid::adjustAcceleration(Flock flock) {
-    if (NOISE_ON) {this->acceleration.add(this->genNoise());}
-    if (AV_ON) {this->acceleration.add(this->avoidWalls().mult(WALL_WEIGHT));}
+    if (NOISE_ON) {this->acceleration.add(RandomCoords(-NOISE, NOISE));}
     if (COH_ON) {this->acceleration.add(this->cohesion(flock).mult(COH_WEIGHT));}
     if (SEP_ON) {this->acceleration.add(this->separation(flock).mult(SEP_WEIGHT));}
     if (ALI_ON) {this->acceleration.add(this->alignment(flock).mult(ALI_WEIGHT));}
-
-    /* Vector2 alignment = this->alignment(flock);
-    this->acceleration.add(alignment); */
-
-
-}
-
-Vector2 Boid::genNoise() {
-    // generates a small noise vector to add to acceleration
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(-NOISE, NOISE);
-    Vector2 noise_vec = Vector2(dist(gen), dist(gen));
-    return noise_vec;
 }
 
 void Boid::draw() {
@@ -109,54 +66,15 @@ void Boid::draw() {
     glPopMatrix(); // Restore the previous transformation matrix
 }
 
-Vector2 Boid::avoidWalls() {
-    
-    Vector2 avoid_vec = Vector2();
-    bool wall_seen = false;
-
-    if (this->position.x > 1 - OBS_THRESH) {
-        // avoid right wall
-        avoid_vec.add(this->avoid(1, this->position.y));
-        wall_seen = true;
-    }
-    
-    if (this->position.x < -1 + OBS_THRESH) {
-        // avoid left wall
-        avoid_vec.add(this->avoid(-1, this->position.y));
-        wall_seen = true;
-    }
-    
-    if (this->position.y > 1 - OBS_THRESH) {
-        // avoid top wall
-        avoid_vec.add(this->avoid(this->position.x, 1));
-        wall_seen = true;
-    }
-    
-    if (this->position.y < -1 + OBS_THRESH) {
-        // avoid bottom wall
-        avoid_vec.add(this->avoid(this->position.x, -1));
-        wall_seen = true;
-    }
-
-    // Reynolds steering
-    if (wall_seen) {
-        avoid_vec.norm();
-        avoid_vec.mult(this->max_speed);
-        avoid_vec.sub(this->velocity);
-        avoid_vec.limit(this->max_force);
-    }
-
-    return avoid_vec;
-}
-
 // returns steer away from point
-Vector2 Boid::avoid(float x, float y) {
+// Write over for objects!!
+/* Vector2 Boid::avoid(float x, float y) {
     Vector2 pos = Vector2(x, y);
     Vector2 l8rsk8rvctr = sub(this->position, pos);
     l8rsk8rvctr.norm();
     l8rsk8rvctr.div(this->vecDist(pos));
     return l8rsk8rvctr;
-}
+} */
 
 // returns steer towards point
 Vector2 Boid::seek(float x, float y) {
@@ -275,32 +193,11 @@ void Boid::handleEdges(){
     }
 
     if (went_off && OFF_SCREEN_RANDOMIZE) {
-        this->color = randomColorVec();
+        this->color = RandomRGB();
     }
 }
 
 // Color shifting
-
-void Boid::boundColor() {
-    if (this->color[0] > 1) {
-        this->color[0] = MIN_COLOR_THRESH;
-    } else if (this->color[0] < MIN_COLOR_THRESH) {
-        this->color[0] = 1;
-    }
-
-    if (this->color[1] > 1) {
-        this->color[1] = MIN_COLOR_THRESH;
-    } else if (this->color[1] < MIN_COLOR_THRESH) {
-        this->color[1] = 1;
-    }
-
-    if (this->color[2] > 1) {
-        this->color[2] = MIN_COLOR_THRESH;
-    } else if (this->color[2] < MIN_COLOR_THRESH) {
-        this->color[2] = 1;
-    }
-}
-
 
 void Boid::colorCoord(Flock flock) {
     glm::vec3 average_color(0.0f, 0.0f, 0.0f);
@@ -317,21 +214,11 @@ void Boid::colorCoord(Flock flock) {
     if (count > 0) {
         average_color /= count;
         this->color = glm::mix(this->color, average_color, MAX_COLOR_FORCE);
-
-        /* glm::vec3 color_steer = average_color - this->color;
-        color_steer = glm::normalize(color_steer);
-        color_steer *= this->max_color_force;
-        this->color += color_steer;
-        this->boundColor(); */
     }
 }
 
 void Boid::colorNoise() {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
-    glm::vec3 color_noise(color_dist(gen), color_dist(gen), color_dist(gen));
-
+    glm::vec3 color_noise = RandomRGB();
     this->color = glm::mix(this->color, color_noise, 0.05);
 }
 
