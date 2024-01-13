@@ -1,5 +1,5 @@
 CXX = g++
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -Wall -Wextra -O0 -ggdb
 UNAME_S := $(shell uname -s)
 
 # Default to an error message for unsupported OS,
@@ -26,11 +26,14 @@ endif
 # Common build rules
 all: simulate boid-test
 
-simulate: vector.o boid.o flock.o solid.o simulate.o
+simulate: vector.o boid.o flock.o solid.o obstacle.o simulate.o
 	$(CXX) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-boid-test: vector.o boid.o flock.o solid.o boid-test.o
+boid-test: vector.o boid.o flock.o solid.o obstacle.o boid-test.o
 	$(CXX) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
+
+%.o: %.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
 	$(RM) simulate boid-test *.o *.dSYM

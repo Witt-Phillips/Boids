@@ -31,8 +31,12 @@ public:
 
     //Methods
     Solid();
+    Solid(float x, float y);
+    virtual ~Solid() {};
 
     virtual void draw() = 0; //output object to screen
+
+    virtual void print() = 0; // print solid information
     
     void update(); // update positional information based on velocity and acceleration
 

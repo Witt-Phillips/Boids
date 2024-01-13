@@ -7,16 +7,13 @@
 using namespace std;
 
 // default constructor randomly generates a boid in the frame.
-Boid::Boid() {
+Boid::Boid() : Solid::Solid() {
     this->type          = boid;
     this->scale         = SCALE;
     this->max_speed     = MAX_SPEED;
     this->max_force     = MAX_FORCE;
 
-    this->position = RandomCoords(-1.0f, 1.0f);
-    this->velocity = RandomCoords(-1.0f, 1.0f);
-    this->velocity.limit(this->max_speed);
-
+    this->velocity = RandomCoords(-1.0f, 1.0f).limit(this->max_speed);
     this->color = RandomRGB();
 }
 
@@ -39,11 +36,11 @@ float Boid::angle() {
     return atan2(this->velocity.y, this->velocity.x);
 }
 
-void Boid::adjustAcceleration(Flock flock) {
+void Boid::adjustAcceleration(WorldState state) {
     if (NOISE_ON) {this->acceleration.add(RandomCoords(-NOISE, NOISE));}
-    if (COH_ON) {this->acceleration.add(this->cohesion(flock).mult(COH_WEIGHT));}
-    if (SEP_ON) {this->acceleration.add(this->separation(flock).mult(SEP_WEIGHT));}
-    if (ALI_ON) {this->acceleration.add(this->alignment(flock).mult(ALI_WEIGHT));}
+    if (COH_ON) {this->acceleration.add(this->cohesion(state).mult(COH_WEIGHT));}
+    if (SEP_ON) {this->acceleration.add(this->separation(state).mult(SEP_WEIGHT));}
+    if (ALI_ON) {this->acceleration.add(this->alignment(state).mult(ALI_WEIGHT));}
 }
 
 void Boid::draw() {
@@ -92,20 +89,23 @@ Vector2 Boid::seek(float x, float y) {
 // RULES -----------------------
 
 // first calculates average position of close but not too-close boids, then gets steering vector to it
-Vector2 Boid::cohesion(Flock flock) {
+Vector2 Boid::cohesion(WorldState state) {
     Vector2 steer = Vector2();
     int count = 0;
     
-    for (Boid& other : flock.boids) {
-        float dist = this->dist(other);
-        // include > SEP_THRESH CLAUSE?
-        if ((dist > 0) && (dist < COH_THRESH)) {
-            // seek that boid, then add to coh_vec
-            steer.add(other.position);
-            count++;
-        }
+    for (Solid* solid : state.objects) {
+        if (solid->type == boid) {
+            Boid* boid = dynamic_cast<Boid*>(solid);
+            float dist = this->dist(*boid);
+            // include > SEP_THRESH CLAUSE?
+            if ((dist > 0) && (dist < COH_THRESH)) {
+                // seek that boid, then add to coh_vec
+                steer.add(boid->position);
+                count++;
+            }
     }
-
+    }
+    
     // returns vector to be added to acceleration based on seeking other boids
     if (count > 0) {
         steer.div(count);
@@ -120,20 +120,24 @@ Vector2 Boid::cohesion(Flock flock) {
     return steer;
 }
 
-Vector2 Boid::separation(Flock flock) {
+Vector2 Boid::separation(WorldState state) {
     Vector2 steer = Vector2();
     int count = 0;
-    for (Boid& other : flock.boids) {
-        float dist = this->dist(other);
+    for (Solid* solid : state.objects) {
+        if (solid->type == boid) {
+        Boid* boid = dynamic_cast<Boid*>(solid);
+
+        float dist = this->dist(*boid);
         // include > SEP_THRESH CLAUSE?
         if ((dist > 0) && (dist < COH_THRESH)) {
             // seek that boid, then add to coh_vec
-            Vector2 diff = sub(this->position, other.position);
+            Vector2 diff = sub(this->position, boid->position);
             diff.div(dist);
             steer.add(diff);
             //sep_vec.add(this->avoid(other.position.x, other.position.y));
             count++;
         }
+    }
     }
 
     // returns vector to be added to acceleration based on seeking other boids
@@ -148,17 +152,21 @@ Vector2 Boid::separation(Flock flock) {
    return steer;
 }
 
-Vector2 Boid::alignment(Flock flock) {
+Vector2 Boid::alignment(WorldState state) {
     Vector2 align_vec = Vector2();
     int count = 0;
-    for (Boid& other : flock.boids) {
-        float dist = this->dist(other);
+    for (Solid* solid : state.objects) {
+        if (solid->type == boid) {
+        Boid* boid = dynamic_cast<Boid*>(solid);
+
+        float dist = this->dist(*boid);
         // include > SEP_THRESH CLAUSE?
         if ((dist > 0) && (dist < COH_THRESH)) {
             // seek that boid, then add to coh_vec
-            align_vec.add(other.velocity);
+            align_vec.add(boid->velocity);
             count++;
         }
+    }
     }
 
     // returns vector to be added to acceleration based on seeking other boids
@@ -199,16 +207,20 @@ void Boid::handleEdges(){
 
 // Color shifting
 
-void Boid::colorCoord(Flock flock) {
+void Boid::colorCoord(WorldState state) {
     glm::vec3 average_color(0.0f, 0.0f, 0.0f);
     int count = 0;
 
-    for (Boid& other : flock.boids) {
-        float dist = this->dist(other);
+    for (Solid* solid : state.objects) {
+        if (solid->type == boid) {
+        Boid* boid = dynamic_cast<Boid*>(solid);
+
+        float dist = this->dist(*boid);
         if ((dist > 0) && (dist < COH_THRESH)) {
-            average_color += other.color;
+            average_color += boid->color;
             count++;
         }
+    }
     }
 
     if (count > 0) {
@@ -222,8 +234,8 @@ void Boid::colorNoise() {
     this->color = glm::mix(this->color, color_noise, 0.05);
 }
 
-void Boid::adjustColor(Flock flock) {
-    this->colorCoord(flock);
+void Boid::adjustColor(WorldState state) {
+    this->colorCoord(state);
     //this->colorNoise();
 }
 

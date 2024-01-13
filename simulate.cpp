@@ -9,7 +9,8 @@
 using namespace std;
 
 int main() {
-    Flock test_flock = Flock(FLOCK_SIZE);
+    //Flock test_flock = Flock(FLOCK_SIZE);
+    WorldState test_state = WorldState(FLOCK_SIZE, 0);
 
     // Graphics
     GLFWwindow* window;
@@ -33,7 +34,8 @@ int main() {
     while (!glfwWindowShouldClose(window))
     {   
         glClear(GL_COLOR_BUFFER_BIT);
-        test_flock.timestep();
+        cout << "Got to one timestep!" << endl;
+        test_state.timestep();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

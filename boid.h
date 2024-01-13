@@ -48,7 +48,7 @@ public:
     float angle();
 
     // combines all rules & some noise to calculate acceleration
-    void adjustAcceleration(Flock flock);
+    void adjustAcceleration(WorldState state);
 
     // returns vector generated from avoidance of point x, y
     Vector2 avoid(float x, float y);
@@ -62,18 +62,18 @@ public:
     void handleEdges();
 
     // coordinates color by averaging with nearby group mates (with some optional noise)
-    void colorCoord(Flock flock);
+    void colorCoord(WorldState state);
 
     // test to always increase color by 1
     void colorNoise();
 
     //Central color control
-    void adjustColor(Flock flock);
+    void adjustColor(WorldState state);
 
     // Rules: all return Vector2 representing contribution to final direction
-    Vector2 cohesion(Flock flock);
-    Vector2 separation(Flock flock);
-    Vector2 alignment(Flock flock);
+    Vector2 cohesion(WorldState state);
+    Vector2 separation(WorldState state);
+    Vector2 alignment(WorldState state);
 };
 
 #endif

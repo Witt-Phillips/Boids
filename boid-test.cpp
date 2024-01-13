@@ -6,15 +6,15 @@
 using namespace std;
 
 int main() {
-    /* Boid test_boid;
-    test_boid.acceleration.x = 0;
-    test_boid.acceleration.y = 0;
-    test_boid.print();
+    WorldState test_state = WorldState(5, 1);
+    //test_state.print();
 
-    test_boid.update();
-    test_boid.print(); */
+    Boid* test_boid = dynamic_cast<Boid*>(test_state.objects[0]);
+    test_boid->print();
 
-    Flock test_flock = Flock(5);
-    test_flock.print();
+    test_state.print();
+
+    test_boid->cohesion(test_state);
+
     return 0;
 }

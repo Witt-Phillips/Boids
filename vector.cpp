@@ -20,14 +20,16 @@ float Vector2::mag() {
     return sqrt(pow(this->x, 2) + pow(this->y, 2));
 }
 
-void Vector2::add(Vector2 other) {
+Vector2 Vector2::add(Vector2 other) {
     this->x += other.x;
     this->y += other.y;
+    return *this;
 }
 
-void Vector2::sub(Vector2 other) {
+Vector2 Vector2::sub(Vector2 other) {
     this->x -= other.x;
     this->y -= other.y;
+    return *this;
 }
 
 Vector2 Vector2::mult(float scaling_factor) {
@@ -42,17 +44,19 @@ Vector2 Vector2::div(float scaling_factor) {
     return *this;
 }
 
-void Vector2::norm() {
+Vector2 Vector2::norm() {
     if (this->mag() != 0) {
         this->div(this->mag());
     }
+    return *this;
 }
 
-void Vector2::limit(float max_mag) {
-    if (this->mag() == 0) {return;}
+Vector2 Vector2::limit(float max_mag) {
+    if (this->mag() == 0) {return *this;}
 
     float scaling_factor = min(max_mag, this->mag()) / this->mag();
     this->mult(scaling_factor);
+    return *this;
 }
 
 // Generalized vector math

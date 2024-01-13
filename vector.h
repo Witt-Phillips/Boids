@@ -21,19 +21,19 @@ public:
 
     void print();
 
-    void add(Vector2 other);
+    Vector2 add(Vector2 other);
 
-    void sub(Vector2 other);
+    Vector2 sub(Vector2 other);
 
     Vector2 mult(float scaling_factor);
 
     Vector2 div(float scaling_factor);
 
     // divide x, y by magnitude
-    void norm();
+    Vector2 norm();
 
     // if magnitude > max_mag, scales down s.t. this->mag == max_mag
-    void limit(float max_mag);
+    Vector2 limit(float max_mag);
 
 };
 

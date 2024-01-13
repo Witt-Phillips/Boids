@@ -1,8 +1,7 @@
 #include "solid.h"
 #include <random>
 #include <iostream>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+
 
 // Utility
 Vector2 RandomCoords(float lower, float upper) {
@@ -22,9 +21,13 @@ glm::vec3 RandomRGB() {
 // Solid class
 Solid::Solid() {
     this->position = RandomCoords(-1.0f, 1.0f);
-    this->velocity = Vector2();
-    this->acceleration = Vector2();
     this->color = glm::vec3(1.0, 1.0, 1.0);
+}
+
+Solid::Solid(float x, float y) : Solid::Solid() {
+    this->position.x = x;
+    this->position.y = y;
+
 }
 
 void Solid::update() {
@@ -56,28 +59,3 @@ void Solid::boundColor() {
         this->color[2] = 1;
     }
 }
-
-/* void obstacle::draw() {
-    glPushMatrix(); // Save the current transformation matrix
-    
-    // Place boid on screen by position
-    glTranslatef(this->position.x, this->position.y, 0);
-
-    // Rotate according to boid's direction
-    //glRotatef(this->angle() * 180.0 / M_PI - 90, 0, 0, 1);
-
-    // Draw the triangle representing the boid
-    glBegin(GL_TRIANGLE_FAN);
-    glColor3f(this->color[0], this->color[1], this->color[2]); // Set the color of the triangle
-    glVertex2f(this->position.x, this->position.y); // Center of the circle
-    //32 here is the number of segments used to draw the circle
-    int segments = 32;
-    for(int i = 0; i <= segments; i++) {
-        GLfloat angle = 2.0f * M_PI * float(i) / float(segments); // Angle in radians
-        glVertex2f(this->position.x + cos(angle) * radius, this->position.y + sin(angle) * radius);
-    }
-
-    glEnd();
-    
-    glPopMatrix(); // Restore the previous transformation matrix
-} */
